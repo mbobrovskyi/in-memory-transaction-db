@@ -86,9 +86,7 @@ func (d *inMemoryDatabase) Rollback() {
 	}
 
 	// Revert previous state
-	d.store = d.transactions[len(d.transactions)-1]
-
-	d.transactions.Pop()
+	d.store = d.transactions.Pop()
 }
 
 func NewInMemoryDatabase() InMemoryDatabase {
