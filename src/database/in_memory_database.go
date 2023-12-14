@@ -27,7 +27,7 @@ type InMemoryDatabase interface {
 
 type store map[string]any
 
-// Since we do not use multithreading, it is most efficient to use a stack, in which we will store history.
+// It is most efficient to use a stack, in which we will store history.
 type transactions []store
 
 func (t *transactions) IsEmpty() bool {
