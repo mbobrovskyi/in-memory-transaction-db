@@ -27,6 +27,7 @@ type InMemoryDatabase interface {
 
 type store map[string]any
 
+// Since we do not use multithreading, it is most efficient to use a stack, in which we will store history.
 type transactions []store
 
 func (t *transactions) IsEmpty() bool {
@@ -37,8 +38,14 @@ func (t *transactions) Push(transactions store) {
 	*t = append(*t, transactions)
 }
 
-func (t *transactions) Pop() {
+func (t *transactions) Peak() store {
+	return (*t)[len(*t)-1]
+}
+
+func (t *transactions) Pop() store {
+	s := t.Peak()
 	*t = (*t)[:len(*t)-1]
+	return s
 }
 
 type inMemoryDatabase struct {
@@ -59,22 +66,26 @@ func (d *inMemoryDatabase) Delete(key string) {
 }
 
 func (d *inMemoryDatabase) StartTransaction() {
+	// Save current state on transactions
 	d.transactions = append(d.transactions, maps.Clone(d.store))
 }
 
 func (d *inMemoryDatabase) Commit() {
+	// Skip if we don't have transactions
 	if d.transactions.IsEmpty() {
 		return
 	}
 
-	d.transactions = d.transactions[:len(d.transactions)-1]
+	d.transactions.Pop()
 }
 
 func (d *inMemoryDatabase) Rollback() {
+	// Skip if we don't have transactions
 	if d.transactions.IsEmpty() {
 		return
 	}
 
+	// Revert previous state
 	d.store = d.transactions[len(d.transactions)-1]
 
 	d.transactions.Pop()
